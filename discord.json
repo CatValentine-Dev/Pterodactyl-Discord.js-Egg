@@ -1,0 +1,72 @@
+{
+    "_comment": "TemuxOS",
+    "meta": {
+        "version": "PTDL_v1"
+    },
+    "exported_at": "2022-01-20T21:26:33+01:00",
+    "name": "temuxos discordjs",
+    "author": "admin@moderncraft.fun",
+    "description": "Egg de discordjs para pterodactyl\r\n\r\n\r\n\r\nInstala o node_modules na instalação. Se você definir user_upload então eu suponho que você sabe o que está fazendo.",
+    "image": "ghcr.io/parkervcp/yolks:nodejs_18",
+    "startup": "if [[ -d .git ]] && [[ {{AUTO_UPDATE}} == \"1\" ]]; then git pull; fi && \/usr\/local\/bin\/npm install --production && \/usr\/local\/bin\/node \/home\/container\/{{BOT_JS_FILE}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"change this part\"\r\n}",
+        "logs": "{}",
+        "stop": "^c"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#\/bin\/ash\r\n\r\napk add --no-cache git make gcc g++ python\r\n\r\ncd \/mnt\/server\r\n\r\nif [[ ! ${INSTALL_REPO} = *\\.git ]]; then\r\n  INSTALL_REPO=$(echo -e ${INSTALL_REPO} | sed 's:\/*$::')\r\n  INSTALL_REPO=\"${INSTALL_REPO}.git\"\r\nfi\r\n\r\necho -e \"working on installing a discord.js bot from ${INSTALL_REPO}\"\r\n\r\nif [ \"${USER_UPLOAD}\" == \"true\" ] || [ \"${USER_UPLOAD}\" == \"1\" ]; then\r\n\techo -e \"assuming user knows what they are doing have a good day.\"\r\n\texit 0\r\nelse\r\n\tif [ \"$(ls -A \/mnt\/server)\" ]; then\r\n\t\techo -e \"\/mnt\/server directory is not empty.\"\r\n\t     if [ -d .git ]; then\r\n\t\t\techo -e \".git directory exists\" \r\n\t\t\tif [ -f .git\/config ]; then\r\n\t\t\t\techo -e \"loading info from git config\"\r\n\t\t\t\tORIGIN=$(git config --get remote.origin.url)\r\n\t\t\telse\r\n\t\t\t\techo -e \"files found with no git config\"\r\n\t\t\t\techo -e \"closing out without touching things to not break anything\"\r\n\t\t\t\texit 10\r\n\t\t\tfi\r\n\t\tfi\r\n\t\tif [ \"${ORIGIN}\" == \"${INSTALL_REPO}\" ]; then\r\n\t\t\techo \"pulling latest from github\"\r\n\t\t\tgit pull \r\n\t\t\techo -e \"updating local npm modules\"\r\n\t\t\t\/usr\/local\/bin\/npm install --production\r\n\t\tfi\r\n\telse\r\n    \techo -e \"\/mnt\/server is empty.\\ncloning files into repo\"\r\n\t\tif [ -z ${INSTALL_BRANCH} ]; then\r\n\t\t\techo -e \"assuming master branch\"\r\n\t\t\tINSTALL_BRANCH=master\r\n\t\tfi\r\n        \r\n\t\techo -e \"running 'git clone --single-branch --branch ${INSTALL_BRANCH} ${INSTALL_REPO} .'\"\r\n\t\tgit clone --single-branch --branch ${INSTALL_BRANCH} ${INSTALL_REPO} .\r\n\t\techo -e \"install npm modules locally\"\r\n\t\t\/usr\/local\/bin\/npm install --production\r\n\tfi\r\nfi \r\n\r\necho -e \"install complete\"\r\nexit 0",
+            "container": "node:18-alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Repositorio",
+            "description": "O repositório git para clonar e instalar o bot discord js",
+            "env_variable": "INSTALL_REPO",
+            "default_value": "",
+            "user_viewable": 1,
+            "user_editable": 1,
+            "rules": "nullable|string|max:128"
+        },
+        {
+            "name": "Instalar Branch",
+            "description": "A Branch do bot a ser instalada",
+            "env_variable": "INSTALL_BRANCH",
+            "default_value": "",
+            "user_viewable": 1,
+            "user_editable": 1,
+            "rules": "nullable|string|max:32"
+        },
+        {
+            "name": "Arquivos enviados pelo usuário",
+            "description": "Pule todo o cruft de instalação é que você está apenas deixando um usuário carregar arquivos.\r\n\r\n0 = false (default)\r\n1 = true",
+            "env_variable": "USER_UPLOAD",
+            "default_value": "0",
+            "user_viewable": 1,
+            "user_editable": 1,
+            "rules": "required|bool"
+        },
+        {
+            "name": "Atualização automática",
+            "description": "Ao usar um repositório git, puxe os arquivos mais recentes na inicialização.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": 1,
+            "user_editable": 1,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Arquivo js",
+            "description": "O arquivo que inicia o bot.",
+            "env_variable": "BOT_JS_FILE",
+            "default_value": "index.js",
+            "user_viewable": 1,
+            "user_editable": 1,
+            "rules": "required|string"
+        }
+    ]
+}
